@@ -1,0 +1,13 @@
+<html>
+  <body>
+    <h1>hi</h1>
+  </body>
+  <script src="./socket.io.js"></script>
+
+  <script>
+    const socket = io("http://localhost:3000");
+    socket.on("new_song", (song) => {
+      document.querySelector("h1").innerHTML = song;
+    });
+  </script>
+</html>
