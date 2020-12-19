@@ -1,12 +1,11 @@
 require("dotenv").config();
 const { Client, MessageAttachment, ReactionCollector } = require("discord.js");
-const client = new Client({ partials: ["MESSAGE", "REACTION"] });
+const client = new Client({ partials: ["MESSAGE", "CHANNEL", "REACTION"] });
 const sqlite3 = require("sqlite3").verbose();
 const guildId = process.env.GUILD_ID;
 const locationRoles = ["LA", "SF", "NY", "SEA", "BER", "ATL"];
 const locationIdSql = "SELECT id FROM reaction_messages where role='location'";
 const henry_token = process.env.HENRY_TOKEN;
-
 let db = new sqlite3.Database("./henry.db", (err) => {
   if (err) {
     console.error(err.message);
@@ -36,6 +35,7 @@ client.on("guildMemberAdd", (member) => {
 });
 
 client.on("message", (msg) => {
+  console.log(msg);
   if (msg.content.includes("change lid")) {
     const lid = msg.content.split(":")[1].trim();
     const sql = `UPDATE reaction_messages SET id=? where role='location'`;
@@ -68,9 +68,8 @@ client.on("messageReactionRemove", (reaction, user) => {
 client.login(henry_token);
 
 async function processEmoji(lId, reaction, user, guildId, method) {
-  if (reaction.message.partial) await reaction.message.fetch();
   if (reaction.message.id !== lId) return;
-  const locationTag = `${reaction.emoji.name.replace("_RAPTOR", "")}`;
+  const locationTag = `${reaction._emoji.name.replace("_RAPTOR", "")}`;
   if (!locationRoles.includes(locationTag)) return reaction.remove();
   const guild = client.guilds.cache.find((g) => g.id === guildId);
   if (locationRoles.includes(locationTag)) {
@@ -78,7 +77,6 @@ async function processEmoji(lId, reaction, user, guildId, method) {
     member.roles[method](guild.roles.cache.find((r) => r.name === locationTag));
   }
 }
-
 process.on("SIGINT", () => {
   db.close();
 });
